@@ -1,4 +1,4 @@
-import time
+ import time
 import uuid
 
 from fastapi import FastAPI, Query
@@ -9,15 +9,6 @@ EMAIL = "23f2004697@ds.study.iitm.ac.in"
 ALLOWED_ORIGIN = "https://dash-actksd.example.com"
 
 app = FastAPI()
-
-# Add CORS FIRST
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[ALLOWED_ORIGIN],
-    allow_credentials=False,
-    allow_methods=["GET", "OPTIONS"],
-    allow_headers=["*"],
-)
 
 
 class MetricsMiddleware(BaseHTTPMiddleware):
@@ -32,8 +23,17 @@ class MetricsMiddleware(BaseHTTPMiddleware):
         return response
 
 
-# Add custom middleware AFTER CORS
+# Add Metrics FIRST
 app.add_middleware(MetricsMiddleware)
+
+# Add CORS LAST (so it executes first)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[ALLOWED_ORIGIN],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/stats")
