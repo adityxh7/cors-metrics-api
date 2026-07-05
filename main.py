@@ -10,9 +10,11 @@ ALLOWED_ORIGIN = "https://dash-actksd.example.com"
 
 app = FastAPI()
 
+# Add CORS FIRST
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[ALLOWED_ORIGIN],
+    allow_credentials=False,
     allow_methods=["GET", "OPTIONS"],
     allow_headers=["*"],
 )
@@ -25,17 +27,18 @@ class MetricsMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
 
         response.headers["X-Request-ID"] = str(uuid.uuid4())
-        response.headers["X-Process-Time"] = f"{time.perf_counter()-start:.6f}"
+        response.headers["X-Process-Time"] = f"{time.perf_counter() - start:.6f}"
 
         return response
 
 
+# Add custom middleware AFTER CORS
 app.add_middleware(MetricsMiddleware)
 
 
 @app.get("/stats")
-def stats(values: str = Query(...)):
-    nums = [int(x) for x in values.split(",")]
+async def stats(values: str = Query(...)):
+    nums = [int(x.strip()) for x in values.split(",")]
 
     total = sum(nums)
 
